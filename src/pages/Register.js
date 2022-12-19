@@ -1,5 +1,4 @@
 import React from 'react'
-import { Form, ButtonToolbar, Button, Input } from 'rsuite';
 import Add from '../img/addAvatar.png'
 
 const Register = () => {
