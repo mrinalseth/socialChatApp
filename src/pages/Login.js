@@ -1,6 +1,10 @@
 import React from 'react'
 import {auth} from "../firebase"
-import {signInWithEmailAndPassword} from "firebase/auth"
+import {
+    signInWithEmailAndPassword, 
+    GoogleAuthProvider,
+    signInWithPopup
+} from "firebase/auth"
 
 const Login = () => {
 
@@ -18,6 +22,18 @@ const Login = () => {
 
     }
 
+    const googleLogin = async () => {
+        const provider = new GoogleAuthProvider()
+        try {
+            const res = await signInWithPopup(auth, provider)
+            const credential = GoogleAuthProvider.credentialFromResult(res)
+            const token = credential.accessToken
+            console.log(res.user)
+        }catch(err) {
+            console.log(err)
+        }
+    }
+
     return (
         <div className='formContainer'>
             <div className='formWrapper'>
@@ -26,8 +42,10 @@ const Login = () => {
                 <form onSubmit={handleSubmit}>
                     <input type="email" placeholder='email' />
                     <input type="password" placeholder='password' />
-                    <button>Sign Up</button>
+                    <button>Sign In</button>
                 </form>
+                <button onClick={googleLogin}>Google</button>
+
                 <p>Yoy don't have an account? Register</p>
             </div>
         </div>

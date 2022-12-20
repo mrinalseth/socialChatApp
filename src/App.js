@@ -7,8 +7,8 @@ import Home from './pages/Home'
 const App = () => {
   return (
     <div>
-      {/* <Register/> */}
-      <Login/>
+      <Register/>
+      {/* <Login/> */}
     </div>
   )
 }

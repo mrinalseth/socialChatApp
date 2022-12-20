@@ -1,11 +1,18 @@
 import React, { useState } from 'react'
 import Add from '../img/addAvatar.png'
-import {auth} from "../firebase"
-import {createUserWithEmailAndPassword} from "firebase/auth"
+import {auth, storage} from "../firebase"
+import {createUserWithEmailAndPassword, updateProfile} from "firebase/auth"
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL
+} from "firebase/storage"
+import { async } from '@firebase/util'
 
 const Register = () => {
 
   const [err, setErr] = useState(false)
+  const [status, setStatus] = useState(0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -16,12 +23,35 @@ const Register = () => {
     
     try{
       const res = await createUserWithEmailAndPassword(auth, email, password)
+      const storageRef = ref(storage, displayName)
+      const uploadTask = uploadBytesResumable(storageRef, file)
+      uploadTask.on("state_changed",  (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+        setStatus(progress)
+        switch (snapshot.state) {
+          case 'paused':
+            console.log('Upload is paused');
+            break;
+          case 'running':
+            console.log('Upload is running');
+            break;
+        }
+      }, (err) => {
+        console.log(err)
+      }, async() => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+        await updateProfile(res.user, {
+          displayName,
+          photoURL: downloadURL
+        })
+        console.log(res.user)
+      })
       
     }catch(error){
       console.log(error)
       setErr(true)
     }
-
   }
   return (
     <div className='formContainer'>
@@ -37,6 +67,7 @@ const Register = () => {
                     <img src={Add} alt="" />
                     <span>Add an avatar</span>
                 </label>
+                <p>{status}</p>
                 <button>Sign Up</button>
                 {err && <span>Something wrong</span>}
             </form>
