@@ -1,18 +1,19 @@
 import React, { useState } from 'react'
 import Add from '../img/addAvatar.png'
-import {auth, storage} from "../firebase"
+import {auth, db, storage} from "../firebase"
 import {createUserWithEmailAndPassword, updateProfile} from "firebase/auth"
 import {
   ref,
   uploadBytesResumable,
   getDownloadURL
 } from "firebase/storage"
-import { async } from '@firebase/util'
+import {doc, setDoc} from "firebase/firestore"
 
 const Register = () => {
 
   const [err, setErr] = useState(false)
   const [status, setStatus] = useState(0)
+  const [fileName, setFileName] = useState("")
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,6 +21,7 @@ const Register = () => {
     const email = e.target[1].value
     const password = e.target[2].value
     const file = e.target[3].files[0]
+    
     
     try{
       const res = await createUserWithEmailAndPassword(auth, email, password)
@@ -45,7 +47,21 @@ const Register = () => {
           displayName,
           photoURL: downloadURL
         })
-        console.log(res.user)
+        try {
+          await setDoc(doc(db, "users", res.user.uid), {
+            uid: res.user.uid,
+            displayName,
+            email,
+            photoURL: downloadURL
+          })
+        }catch(err) {
+          console.log(err)
+        }
+        try {
+          await setDoc(doc(db, "userChats", res.user.uid), {})
+        }catch (err) {
+          console.log(err)
+        }
       })
       
     }catch(error){
@@ -62,10 +78,16 @@ const Register = () => {
                 <input type="text" placeholder='display name' />
                 <input type="email" placeholder='email' />
                 <input type="password" placeholder='password' />
-                <input type="file" id='file' style={{display: "none"}} />
+                <input type="file" id='file' style={{display: "none"}} onChange={(e) => {
+                  setFileName(e.target.files[0].name)
+                }} />
                 <label htmlFor="file">
                     <img src={Add} alt="" />
-                    <span>Add an avatar</span>
+                    <span>{
+                        fileName === ""?
+                        "upload Avater":
+                        <p>{fileName}</p>
+                      }</span>
                 </label>
                 <p>{status}</p>
                 <button>Sign Up</button>
